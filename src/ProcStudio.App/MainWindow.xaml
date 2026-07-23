@@ -1,0 +1,294 @@
+<Window x:Class="ProcStudio.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:core="clr-namespace:ProcStudio.Core;assembly=ProcStudio.Core"
+        mc:Ignorable="d"
+        Title="ProcStudio"
+        Width="1600"
+        Height="960"
+        MinWidth="1280"
+        MinHeight="760"
+        WindowStartupLocation="CenterScreen">
+  <Grid Margin="12">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="290" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0" Style="{StaticResource PanelStyle}">
+      <DockPanel LastChildFill="True">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+          <TextBlock Text="ProcStudio"
+                     FontSize="24"
+                     FontWeight="Bold"
+                     VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Text="Windows Process Intelligence"
+                     Foreground="{StaticResource MutedTextBrush}"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+          <TextBox Width="320"
+                   Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                   ToolTip="Pesquisar por nome, PID, usuario, empresa ou linha de comando" />
+          <ComboBox Width="180"
+                    ItemsSource="{Binding Profiles}"
+                    SelectedItem="{Binding SelectedProfile}"
+                    DisplayMemberPath="Name"
+                    SelectionChanged="ProfileComboBox_OnSelectionChanged" />
+          <Button Content="Atualizar" Command="{Binding RefreshCommand}" />
+          <Button Content="JSON" Click="ExportJson_OnClick" />
+          <Button Content="CSV" Click="ExportCsv_OnClick" />
+          <Button Content="HTML" Click="ExportHtml_OnClick" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" Margin="0,4,0,4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Style="{StaticResource PanelStyle}">
+        <StackPanel>
+          <TextBlock Text="Processos visiveis" Foreground="{StaticResource MutedTextBrush}" />
+          <TextBlock Text="{Binding ProcessCount}" FontSize="28" FontWeight="SemiBold" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1" Style="{StaticResource PanelStyle}">
+        <StackPanel>
+          <TextBlock Text="CPU agregada" Foreground="{StaticResource MutedTextBrush}" />
+          <TextBlock Text="{Binding TotalCpu, StringFormat={}{0:F1}%}" FontSize="28" FontWeight="SemiBold" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="2" Style="{StaticResource PanelStyle}">
+        <StackPanel>
+          <TextBlock Text="RAM agregada" Foreground="{StaticResource MutedTextBrush}" />
+          <TextBlock Text="{Binding TotalMemoryMb, StringFormat={}{0:F0} MB}" FontSize="28" FontWeight="SemiBold" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="3" Style="{StaticResource PanelStyle}">
+        <StackPanel>
+          <TextBlock Text="GPU agregada" Foreground="{StaticResource MutedTextBrush}" />
+          <TextBlock Text="{Binding TotalGpu, StringFormat={}{0:F1}%}" FontSize="28" FontWeight="SemiBold" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="350" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Style="{StaticResource PanelStyle}">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     Text="Arvore de processos"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Margin="0,0,0,10" />
+          <TreeView ItemsSource="{Binding ProcessTree}"
+                    SelectedItemChanged="ProcessTree_OnSelectedItemChanged"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{StaticResource TextBrush}">
+            <TreeView.Resources>
+              <HierarchicalDataTemplate DataType="{x:Type core:ObservableProcessTreeNode}" ItemsSource="{Binding Children}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{Binding Name}" />
+                  <TextBlock Text="  #" Foreground="{StaticResource MutedTextBrush}" />
+                  <TextBlock Text="{Binding ProcessId}" Foreground="{StaticResource MutedTextBrush}" />
+                </StackPanel>
+              </HierarchicalDataTemplate>
+            </TreeView.Resources>
+          </TreeView>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="1" Style="{StaticResource PanelStyle}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="Painel principal"
+                       FontSize="16"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{Binding StatusText}"
+                       Foreground="{StaticResource MutedTextBrush}" />
+          </StackPanel>
+
+          <DataGrid ItemsSource="{Binding Processes}"
+                    SelectedItem="{Binding SelectedProcess}"
+                    IsReadOnly="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70" />
+              <DataGridTextColumn Header="PPID" Binding="{Binding ParentProcessId}" Width="70" />
+              <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="2*" />
+              <DataGridTextColumn Header="Usuario" Binding="{Binding UserName}" Width="1.5*" />
+              <DataGridTextColumn Header="Empresa" Binding="{Binding Company}" Width="1.4*" />
+              <DataGridTextColumn Header="CPU" Binding="{Binding CpuPercent, StringFormat={}{0:F1}%}" Width="90" />
+              <DataGridTextColumn Header="RAM" Binding="{Binding WorkingSetMb, StringFormat={}{0:F0} MB}" Width="100" />
+              <DataGridTextColumn Header="GPU" Binding="{Binding GpuPercent, StringFormat={}{0:F1}%}" Width="90" />
+              <DataGridTextColumn Header="Handles" Binding="{Binding HandleCount}" Width="90" />
+              <DataGridCheckBoxColumn Header="Assinado" Binding="{Binding IsSigned}" Width="90" />
+              <DataGridCheckBoxColumn Header="Elevado" Binding="{Binding IsElevated}" Width="90" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="3">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="420" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Style="{StaticResource PanelStyle}">
+        <StackPanel>
+          <TextBlock Text="Resumo do processo selecionado"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Margin="0,0,0,10" />
+          <TextBlock Text="{Binding SelectedProcess.Name, TargetNullValue=Nenhum processo selecionado}"
+                     FontSize="22"
+                     FontWeight="SemiBold" />
+          <TextBlock Text="{Binding SelectedProcess.ExecutablePath}" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,6,0,0" />
+          <TextBlock Text="{Binding SelectedProcess.CommandLine}" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,6,0,12" />
+          <Separator Margin="0,6" />
+          <TextBlock Text="{Binding SelectedProcess.StartTime, StringFormat=Inicio: {0:dd/MM/yyyy HH:mm:ss}}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.CpuPercent, StringFormat=CPU: {0:F1}%}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.WorkingSetMb, StringFormat=RAM: {0:F0} MB}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.PrivateMemoryMb, StringFormat=Memoria privada: {0:F0} MB}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.GpuPercent, StringFormat=GPU: {0:F1}%}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.GpuDedicatedMemoryMb, StringFormat=VRAM dedicada: {0:F0} MB}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.HandleCount, StringFormat=Handles: {0}}" Margin="0,3" />
+          <TextBlock Text="{Binding SelectedProcess.UserName, StringFormat=Usuario: {0}}" Margin="0,3" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1" Style="{StaticResource PanelStyle}">
+        <TabControl>
+          <TabItem Header="Timeline">
+            <DockPanel Margin="8">
+              <TextBlock DockPanel.Dock="Top"
+                         Text="Amostras recentes por processo"
+                         Foreground="{StaticResource MutedTextBrush}"
+                         Margin="0,0,0,8" />
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding SelectedTimeline}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="{StaticResource PanelAltBrush}" CornerRadius="8" Padding="8" Margin="0,0,0,8">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="{Binding Timestamp, StringFormat={}{0:HH:mm:ss}}" VerticalAlignment="Center" />
+                          <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding CpuPercent, StringFormat=CPU {0:F1}%}" />
+                            <ProgressBar Maximum="100" Value="{Binding CpuPercent}" Height="8" />
+                            <TextBlock Text="{Binding WorkingSetMb, StringFormat=RAM {0:F0} MB}" Margin="0,6,0,0" />
+                            <ProgressBar Maximum="4096" Value="{Binding WorkingSetMb}" Height="8" />
+                          </StackPanel>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </DockPanel>
+          </TabItem>
+
+          <TabItem Header="Threads">
+            <DataGrid ItemsSource="{Binding SelectedThreads}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="TID" Binding="{Binding ThreadId}" Width="80" />
+                <DataGridTextColumn Header="Estado" Binding="{Binding State}" Width="120" />
+                <DataGridTextColumn Header="Espera" Binding="{Binding WaitReason}" Width="130" />
+                <DataGridTextColumn Header="CPU" Binding="{Binding CpuPercent, StringFormat={}{0:F1}%}" Width="100" />
+                <DataGridTextColumn Header="CPU Total" Binding="{Binding TotalProcessorTime}" Width="120" />
+                <DataGridTextColumn Header="Base" Binding="{Binding BasePriority}" Width="80" />
+                <DataGridTextColumn Header="Atual" Binding="{Binding CurrentPriority}" Width="80" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="DLLs">
+            <DataGrid ItemsSource="{Binding SelectedModules}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="1.2*" />
+                <DataGridTextColumn Header="Versao" Binding="{Binding Version}" Width="100" />
+                <DataGridCheckBoxColumn Header="Assinado" Binding="{Binding IsSigned}" Width="90" />
+                <DataGridTextColumn Header="Empresa" Binding="{Binding Company}" Width="1.2*" />
+                <DataGridTextColumn Header="Assinatura" Binding="{Binding SignatureSubject}" Width="2*" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="Rede">
+            <DataGrid ItemsSource="{Binding SelectedConnections}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Proto" Binding="{Binding Protocol}" Width="80" />
+                <DataGridTextColumn Header="Local" Binding="{Binding LocalAddress}" Width="150" />
+                <DataGridTextColumn Header="Porta" Binding="{Binding LocalPort}" Width="80" />
+                <DataGridTextColumn Header="Remoto" Binding="{Binding RemoteAddress}" Width="150" />
+                <DataGridTextColumn Header="Porta R." Binding="{Binding RemotePort}" Width="80" />
+                <DataGridTextColumn Header="Estado" Binding="{Binding State}" Width="120" />
+                <DataGridTextColumn Header="Localizacao" Binding="{Binding ApproximateLocation}" Width="150" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="Memoria">
+            <DataGrid ItemsSource="{Binding SelectedMemoryRegions}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Base" Binding="{Binding BaseAddress, StringFormat=0x{0:X}}" Width="140" />
+                <DataGridTextColumn Header="Tamanho" Binding="{Binding Size, StringFormat={}{0:N0}}" Width="120" />
+                <DataGridTextColumn Header="Estado" Binding="{Binding State}" Width="100" />
+                <DataGridTextColumn Header="Protecao" Binding="{Binding Protection}" Width="140" />
+                <DataGridTextColumn Header="Tipo" Binding="{Binding Type}" Width="100" />
+                <DataGridCheckBoxColumn Header="Private" Binding="{Binding IsPrivate}" Width="90" />
+                <DataGridCheckBoxColumn Header="Image" Binding="{Binding IsImage}" Width="90" />
+                <DataGridCheckBoxColumn Header="Mapped" Binding="{Binding IsMapped}" Width="90" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="Eventos">
+            <DataGrid ItemsSource="{Binding SelectedEvents}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Horario" Binding="{Binding Timestamp, StringFormat={}{0:HH:mm:ss}}" Width="110" />
+                <DataGridTextColumn Header="Tipo" Binding="{Binding Kind}" Width="140" />
+                <DataGridTextColumn Header="Mensagem" Binding="{Binding Message}" Width="*" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="Alertas">
+            <DataGrid ItemsSource="{Binding Alerts}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Horario" Binding="{Binding Timestamp, StringFormat={}{0:HH:mm:ss}}" Width="110" />
+                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="80" />
+                <DataGridTextColumn Header="Processo" Binding="{Binding ProcessName}" Width="160" />
+                <DataGridTextColumn Header="Regra" Binding="{Binding RuleName}" Width="120" />
+                <DataGridTextColumn Header="Motivo" Binding="{Binding Reason}" Width="*" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+        </TabControl>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>

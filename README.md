@@ -51,6 +51,20 @@ dotnet test ProcStudio.sln -c Release
 dotnet run --project .\src\ProcStudio.App\ProcStudio.App.csproj
 ```
 
+Para gerar uma versao final sem dependencia de .NET no computador do usuario:
+
+```powershell
+dotnet publish .\src\ProcStudio.App\ProcStudio.App.csproj `
+  -c Release `
+  -f net8.0-windows10.0.19041.0 `
+  -r win-x64 `
+  --self-contained true `
+  -p:PublishSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:PublishReadyToRun=true `
+  -o .\artifacts\publish\win-x64
+```
+
 ## Pipeline GitHub
 
 O workflow em `.github/workflows/build-windows.yml`:
@@ -58,8 +72,9 @@ O workflow em `.github/workflows/build-windows.yml`:
 - restaura dependencias
 - compila toda a solucao em `Release`
 - executa testes
-- publica a aplicacao `win-x64`
-- envia os binarios como artifact do workflow
+- publica a aplicacao `win-x64` em modo `self-contained`
+- empacota a distribuicao em `ProcStudio-win-x64-self-contained.zip`
+- envia o `.zip` final como artifact do workflow
 
 ## Proximos upgrades de nivel profissional
 

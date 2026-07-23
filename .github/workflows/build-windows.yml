@@ -36,12 +36,18 @@ jobs:
           --configuration Release
           --framework net8.0-windows10.0.19041.0
           --runtime win-x64
-          --self-contained false
-          -p:PublishSingleFile=false
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:PublishReadyToRun=true
           -o artifacts/publish/win-x64
+
+      - name: Create Distribution Zip
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/publish/win-x64/* -DestinationPath artifacts/ProcStudio-win-x64-self-contained.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ProcStudio-win-x64
-          path: artifacts/publish/win-x64
+          name: ProcStudio-win-x64-self-contained
+          path: artifacts/ProcStudio-win-x64-self-contained.zip

@@ -321,7 +321,7 @@ public sealed class WindowsSystemInspector : ISystemInspector
                 foreach (ManagementObject process in searcher.Get())
                 {
                     var pid = Convert.ToInt32(process["ProcessId"], CultureInfo.InvariantCulture);
-                    var parent = process["ParentProcessId"] is null
+                    int? parent = process["ParentProcessId"] is null
                         ? null
                         : Convert.ToInt32(process["ParentProcessId"], CultureInfo.InvariantCulture);
                     result[pid] = new ProcessMetadata(

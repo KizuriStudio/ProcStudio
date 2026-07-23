@@ -416,11 +416,14 @@ public static class ProcessTreeBuilder
     {
         var list = processes.ToList();
         var knownIds = list.Select(x => x.ProcessId).ToHashSet();
-        var byParent = list.GroupBy(x => x.ParentProcessId)
-            .ToDictionary(x => x.Key, x => x.ToList());
+        var byParent = list
+            .GroupBy(x => x.ParentProcessId)
+            .ToDictionary(
+                x => x.Key.GetValueOrDefault(-1),
+                x => x.ToList());
 
         List<ProcessTreeNode> BuildNodes(int? parentId)
-            => byParent.TryGetValue(parentId, out var children)
+            => byParent.TryGetValue(parentId.GetValueOrDefault(-1), out var children)
                 ? children
                     .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(x => new ProcessTreeNode(x.ProcessId, x.Name, BuildNodes(x.ProcessId)))
